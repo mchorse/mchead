@@ -1,5 +1,10 @@
 window.render = function() {};
 
+function $(selector, reference)
+{
+    return (reference || document).querySelector(selector);
+}
+
 /* ThreeJS variables */
 var scene, camera, renderer, loader;
 
@@ -101,6 +106,9 @@ scene.add(lights[0]);
 scene.add(lights[1]);
 scene.add(lights[2]);
 
+renderer.domElement.id = "renderer";
+$(".main").appendChild(renderer.domElement);
+
 loader.load(
 	'steve.png',
 	function(texture) 
@@ -141,11 +149,17 @@ loader.load(
 	}
 );
 
-document.body.appendChild(renderer.domElement);
+var elem = renderer.domElement;
 
-var click = false, lastx, lasty, tmpx, tmpy, lastrx, lastry;
+var click = false, 
+    lastx = 0, 
+    lasty = 0, 
+    tmpx = 0, 
+    tmpy = 0, 
+    lastrx = 0, 
+    lastry = 0;
 
-document.addEventListener("mousedown", function (e)
+elem.addEventListener("mousedown", function (e)
 {
     click = true;
     lastx = e.pageX;
@@ -155,7 +169,7 @@ document.addEventListener("mousedown", function (e)
     lastry = rotation_y;
 });
 
-document.addEventListener("mousemove", function (e)
+elem.addEventListener("mousemove", function (e)
 {
     if (click)
     {
@@ -169,7 +183,7 @@ document.addEventListener("mousemove", function (e)
     render();
 });
 
-document.addEventListener("mouseup", function ()
+elem.addEventListener("mouseup", function ()
 {
     click = false;
     rotation_x = lastrx + tmpx/90;

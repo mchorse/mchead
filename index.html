@@ -1,17 +1,54 @@
 <!doctype html>
 <html>
 	<head>
-		<title>Minecraft skin viewer</title>
-		<style>
-			body { 
-				margin: 0; 
-				overflow: hidden; 
-			}
-		</style>
+		<title>Head and body avatar generator for Minecraft</title>
+        <link href="styles.css" rel="stylesheet" type="text/css">
 	</head>
 	
 	<body>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.min.js"></script>
+        <div class="main">
+            <div class="options">
+                <!-- not a final name -->
+                <h1>McHead</h1>
+                
+                <p>Hello, there! This is a simple avatar generator based a Minecraft skin.</p>
+                <p>Configure options below to get suitable result.</p>
+                
+                <h2>Options</h2>
+                
+                <p>
+                    <label>
+                        <input type="checkbox" checked="checked"> Head Only
+                    </label>
+                </p>
+            
+                <p>
+                    <label>
+                        <input type="checkbox" checked="checked"> Flat
+                    </label>
+                </p>
+                
+                <p>
+                    <label>
+                        <input type="checkbox" checked="checked"> Include Hair
+                    </label>
+                </p>
+                
+                <p>
+                    <input type="number" value="45"> Yaw 
+                </p>
+                
+                <p>
+                    <input type="number" value="45"> Pitch
+                </p>
+                
+                <p>
+                    <button>Reset Rotation</button>
+                </p>
+            </div>
+        </div>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.min.js"></script>
 		<script src="app.js"></script>
 	</body>
 </html>

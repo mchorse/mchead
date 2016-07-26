@@ -1,0 +1,74 @@
+body 
+{ 
+	margin: 0; 
+	overflow: hidden; 
+}
+
+.main
+{
+    width: 100%;
+}
+
+#renderer
+{
+    cursor: move;
+    
+    float: left;
+    margin-top: 20px;
+    margin-left: 40px;
+}
+
+.options
+{
+    border-right: 1px solid #f4f4f4;
+    font: 13px Helvetica;
+    font-weight: 100;
+    
+    float: left;
+    padding: 20px 20px;
+    width: 220px;
+}
+
+.options :first-child
+{
+    margin-top: 0px;
+}
+
+.options h1,
+.options h2
+{
+    font-size: 20px;
+    font-weight: 100;
+    
+    margin: 0px;
+    margin-bottom: 1em; 
+    margin-top: 1em; 
+}
+
+.options h1
+{
+    font-size: 24px;
+}
+
+.options p
+{
+    line-height: 1.4em;
+    
+    margin: 0px;
+    margin-bottom: 1em;
+}
+
+.options [type=checkbox]
+{
+    vertical-align: 1px;
+}
+
+.options [type=number]
+{
+    padding: 2px 4px;
+}
+
+.options button
+{
+    font: 12px Helvetica;
+}
