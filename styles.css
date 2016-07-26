@@ -9,18 +9,34 @@ body
     width: 100%;
 }
 
-#renderer
+.canvas,
+.output
 {
-    cursor: move;
-    
     float: left;
     margin-top: 20px;
     margin-left: 40px;
+    width: 256px;
+}
+
+.output h2,
+.canvas h2
+{
+    font-family: Helvetica;
+    font-size: 20px;
+    font-weight: 100;
+    text-align: center;
+    
+    margin: 0px;
+    margin-bottom: 0.5em; 
+}
+
+#renderer
+{
+    cursor: move;
 }
 
 .options
 {
-    border-right: 1px solid #f4f4f4;
     font: 13px Helvetica;
     font-weight: 100;
     
@@ -55,6 +71,14 @@ body
     line-height: 1.4em;
     
     margin: 0px;
+    margin-bottom: 1em;
+}
+
+.options hr
+{
+    border: 1px solid #f0f0f0;
+    border-bottom: 0px;
+    
     margin-bottom: 1em;
 }
 

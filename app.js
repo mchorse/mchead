@@ -64,7 +64,7 @@ function apply_cube(geo, x, y, w, h, d)
 function create_part(texture, x, y, w, h, d)
 {
 	var geometry = new THREE.BoxGeometry(w / 8, h / 8, d / 8);
-	var material = new THREE.MeshPhongMaterial({
+	var material = new THREE.MeshLambertMaterial({
 		map: texture,
 		side: THREE.DoubleSide
 	});
@@ -107,7 +107,7 @@ scene.add(lights[1]);
 scene.add(lights[2]);
 
 renderer.domElement.id = "renderer";
-$(".main").appendChild(renderer.domElement);
+$(".canvas").appendChild(renderer.domElement);
 
 loader.load(
 	'steve.png',
@@ -188,4 +188,6 @@ elem.addEventListener("mouseup", function ()
     click = false;
     rotation_x = lastrx + tmpx/90;
     rotation_y = lastry + tmpy/90;
+    
+    document.getElementById("output").src = renderer.domElement.toDataURL("image/png");
 });
