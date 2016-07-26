@@ -1,71 +1,67 @@
 <!doctype html>
 <html>
 	<head>
+        <meta charset="utf-8">
 		<title>Head and body avatar generator for Minecraft</title>
         <link href="styles.css" rel="stylesheet" type="text/css">
 	</head>
 	
 	<body>
-        <div class="main">
-            <div class="options">
-                <!-- not a final name -->
-                <h1>McHead</h1>
-                
-                <p>Hello, there! This is a simple avatar generator based on a Minecraft skin.</p>
-                <p>Configure options below to get desirable result.</p>
-                
-                <h2>Options</h2>
-                
-                <p>
-                    <input type="file" title="Minecraft skin">
-                </p>
-                
-                <p>
-                    <label>
-                        <input type="checkbox" checked="checked"> Head Only
-                    </label>
-                </p>
-            
-                <p>
-                    <label>
-                        <input type="checkbox" checked="checked"> Flat
-                    </label>
-                </p>
-                
-                <p>
-                    <label>
-                        <input type="checkbox" checked="checked"> Include Hair
-                    </label>
-                </p>
-                
-                <p>
-                    <input type="number" value="45"> Yaw 
-                </p>
-                
-                <p>
-                    <input type="number" value="45"> Pitch
-                </p>
-                
-                <p>
-                    <button>Reset Rotation</button>
-                </p>
-                
-                <hr>
-                
-                <p>When you're done, simply right click the output image, and choose "Save Image as...," and save it to desired location.</p>
-            </div>
-            
-            <div class="canvas">
-                <h2>Canvas</h2>
-            </div>
-            
-            <div class="output">
-                <h2>Output</h2>
-                <img id="output">
-            </div>
-        </div>
+<!-- Root element of the application -->
+<div class="main">
+    <div class="options">
+        <!-- not a final name -->
+        <h1>McHead</h1>
         
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.min.js"></script>
-		<script src="app.js"></script>
+        <p>Hello, there! This is a simple avatar generator based on a Minecraft skin.</p>
+        <p>Configure options below to get desirable result.</p>
+        
+        <h2>Options</h2>
+        <p><input name="texture" type="file" title="Minecraft skin"></p>
+        <p>
+            <label>
+                <input name="head" type="checkbox" checked="checked"> Head Only
+            </label>
+        </p>
+        <p>
+            <label>
+                <input name="flat" type="checkbox" checked="checked"> Flat
+            </label>
+        </p>
+        <p>
+            <label>
+                <input name="outer" type="checkbox" checked="checked"> Include Hair
+            </label>
+        </p>
+        <p><input name="y" type="number" value="45"> Yaw</p>
+        <p><input name="x" type="number" value="45"> Pitch</p>
+        <p><button id="reset">Reset Rotation</button></p>
+        
+        <hr>
+        
+        <p>
+            When you're done, simply right click the output image, and choose 
+            "Save Image as...," and save the image as <code>*.png</code> to 
+            desired location.
+        </p>
+        
+        <p>
+            Created by <a href="http://github.com/mchorse/">McHorse</a>, hosted 
+            on <a href="http://github.com/mchorse/mchead/">github</a>.
+        </p>
+    </div>
+    
+    <div class="canvas">
+        <h2>Canvas</h2>
+    </div>
+    
+    <div class="output">
+        <h2>Output</h2>
+        <img id="output">
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.min.js"></script>
+<script src="app.js"></script>
 	</body>
 </html>

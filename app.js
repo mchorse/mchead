@@ -1,13 +1,23 @@
+/**
+ * Creates a point structure.
+ */
 function point(x, y)
 {
     return {x: x, y: y};
 }
 
+/**
+ * Creates a ThreeJS vector (2d point) for UV.
+ */
 function vec(x, y)
 {
 	return new THREE.Vector2(x / tw, y / th);
 }
 
+/**
+ * Apply geometry's UV of the texture on the cube's side given 
+ * the rectangle on the texture
+ */
 function apply_uv(geo, side, x, y, w, h)
 {
 	side = side * 2;
@@ -31,6 +41,9 @@ function apply_uv(geo, side, x, y, w, h)
 	}
 }
 
+/**
+ * Apply texture rect on cube's geometry
+ */
 function apply_cube(geo, x, y, w, h, d)
 {
 	// front and back
@@ -48,6 +61,9 @@ function apply_cube(geo, x, y, w, h, d)
 	geo.uvsNeedUpdate = true;
 }
 
+/**
+ * Create a Minecraft-like limb (3d rectangle)
+ */
 function create_part(texture, x, y, w, h, d)
 {
 	var geometry = new THREE.BoxGeometry(w / 8, h / 8, d / 8);
