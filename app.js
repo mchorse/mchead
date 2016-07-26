@@ -1,20 +1,7 @@
-window.render = function() {};
-
-function $(selector, reference)
+function point(x, y)
 {
-    return (reference || document).querySelector(selector);
+    return {x: x, y: y};
 }
-
-/* ThreeJS variables */
-var scene, camera, renderer, loader;
-
-/* Resolution */
-var width = 256, height = 256;
-
-var tw = 64, th = 32;
-
-var rotation_x = 0,
-	rotation_y = 0;
 
 function vec(x, y)
 {
@@ -77,6 +64,82 @@ function create_part(texture, x, y, w, h, d)
 	return cube;
 }
 
+/**
+ * Mouse handler
+ * 
+ * Responsible for rotating the model.
+ */
+var MouseHandler = function(target, x, y)
+{
+    this.target = target;
+    this.on = false;
+    
+    this.result = point(x, y);
+    this.first = point(0, 0);
+    this.tmp = point(0, 0);
+    this.last = point(0, 0);
+}
+
+MouseHandler.prototype = {
+    attach: function(element)
+    {
+        element.addEventListener("mousedown", this.down.bind(this));
+        element.addEventListener("mousemove", this.move.bind(this));
+        element.addEventListener("mouseup", this.up.bind(this));
+    },
+    
+    down: function(e)
+    {
+        this.on = true;
+        
+        this.first.x = e.pageX;
+        this.first.y = e.pageY;
+        
+        this.last.x = this.result.x;
+        this.last.y = this.result.y;
+    },
+    
+    move: function(e)
+    {
+        if (!this.on) return;
+
+        this.tmp.x = e.pageX - this.first.x;
+        this.tmp.y = e.pageY - this.first.y;
+
+        this.applyRotation();
+        this.target.render(this.result.x, this.result.y);
+    },
+    
+    up: function(e)
+    {
+        this.on = false;
+        this.applyRotation();
+    },
+    
+    applyRotation: function()
+    {
+        this.result.x = this.last.x + this.tmp.x / 90;
+        this.result.y = this.last.y + this.tmp.y / 90;
+    }
+};
+
+window.render = function() {};
+
+function $(selector, reference)
+{
+    return (reference || document).querySelector(selector);
+}
+
+/* ThreeJS variables */
+var scene, camera, renderer, loader;
+
+/* Resolution */
+var width = 256, height = 256;
+
+/* Texture size */
+var tw = 64, th = 32;
+
+/* ThreeJS initialization */
 var ambientLight = new THREE.AmbientLight(0x333333);
 
 scene = new THREE.Scene();
@@ -123,71 +186,25 @@ loader.load(
 		
 		var group = new THREE.Object3D();
 		
-		group.add(head);
-		group.add(outer);
-		
-		camera.position.z = 1;
-		
+        group.scale.x = group.scale.y = group.scale.z = 128;
 		outer.scale.x = outer.scale.y = outer.scale.z = 1.1;
 		outer.material.transparent = true;
+        camera.position.z = 1;
 		
+		group.add(head);
+		group.add(outer);
 		scene.add(group);
-        
-        group.scale.x = group.scale.y = group.scale.z = 128;
-        rotation_x = Math.PI / 4;
-        rotation_y = Math.PI / 4;
 		
-		window.render = function()
+		window.render = function(x, y)
 		{
-			group.rotation.y = rotation_x;
-			group.rotation.x = rotation_y;
+			group.rotation.y = x;
+			group.rotation.x = y;
             
 			renderer.render(scene, camera);
 		};
         
-        window.render();
+        window.render(Math.PI/4, Math.PI/4);
 	}
 );
 
-var elem = renderer.domElement;
-
-var click = false, 
-    lastx = 0, 
-    lasty = 0, 
-    tmpx = 0, 
-    tmpy = 0, 
-    lastrx = 0, 
-    lastry = 0;
-
-elem.addEventListener("mousedown", function (e)
-{
-    click = true;
-    lastx = e.pageX;
-    lasty = e.pageY;
-
-    lastrx = rotation_x;
-    lastry = rotation_y;
-});
-
-elem.addEventListener("mousemove", function (e)
-{
-    if (click)
-    {
-        tmpx = e.pageX - lastx;
-        tmpy = e.pageY - lasty;
-
-        rotation_x = lastrx + tmpx/90;
-        rotation_y = lastry + tmpy/90;
-    }
-
-    render();
-});
-
-elem.addEventListener("mouseup", function ()
-{
-    click = false;
-    rotation_x = lastrx + tmpx/90;
-    rotation_y = lastry + tmpy/90;
-    
-    document.getElementById("output").src = renderer.domElement.toDataURL("image/png");
-});
+(new MouseHandler(window, Math.PI/4, Math.PI/4)).attach(renderer.domElement);
