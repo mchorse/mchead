@@ -349,10 +349,12 @@ Model.prototype =
 /**
  * Entry point of the application
  */
-var App = function(options, canvas, w, h)
+var App = function(options, canvas, output, w, h)
 {
     this.options = options;
     this.canvas = canvas;
+    this.output = output;
+    
     this.size = point(w, h);
 };
 
@@ -401,7 +403,7 @@ App.prototype =
     		texture.magFilter = texture.minFilter = THREE.NearestFilter;
 	        
             self.model.setTexture(texture);
-            self.render(Math.PI/4, Math.PI/4);
+            self.justRender();
         });
         
         /* Export */
@@ -441,6 +443,7 @@ App.prototype =
             
             self.mouse.setX(45);
             self.mouse.setY(45);
+            self.justRender();
         });
     },
     
@@ -480,6 +483,11 @@ App.prototype =
         $("[name=y]").value = y.toFixed(4);
     },
     
+    up: function()
+    {
+        this.output.src = this.renderer.domElement.toDataURL("image/png");
+    },
+    
     readFile: function(file)
     {
         var self = this;
@@ -510,5 +518,6 @@ App.prototype =
     justRender: function()
     {
         this.render(this.mouse.result.x, this.mouse.result.y);
+        this.up();
     }
 };

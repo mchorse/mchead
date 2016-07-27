@@ -10,7 +10,6 @@
 <!-- Root element of the application -->
 <div class="main">
     <div class="options">
-        <!-- not a final name -->
         <h1>McHead</h1>
         
         <p>Hello, there! This is a simple avatar generator based on a Minecraft skin.</p>
@@ -68,7 +67,7 @@
     var options = $(".options"),
         canvas = $(".canvas");
 
-    var app = new App(options, canvas, 256, 512);
+    var app = new App(options, canvas, $("#output"), 256, 512);
 
     app.init();
 </script>
