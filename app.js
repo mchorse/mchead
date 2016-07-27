@@ -157,7 +157,13 @@ MouseHandler.prototype =
     {
         on(element, "mousedown", this.down.bind(this));
         on(element, "mousemove", this.move.bind(this));
+        on(element, "mouseout", this.out.bind(this));
         on(element, "mouseup", this.up.bind(this));
+    },
+    
+    out: function()
+    {
+        this.on = false;
     },
     
     down: function(e)
@@ -179,44 +185,86 @@ MouseHandler.prototype =
         this.tmp.y = e.pageY - this.first.y;
 
         this.applyRotation();
-        this.target.render(this.result.x, this.result.y);
+        this.render();
     },
     
     up: function(e)
     {
         this.on = false;
         this.applyRotation();
+        this.target.up();
     },
     
     applyRotation: function()
     {
-        this.result.x = this.last.x + this.tmp.x / 90;
-        this.result.y = this.last.y + this.tmp.y / 90;
+        var fullPie = Math.PI * 2;
+        
+        this.result.x = (this.last.x + this.tmp.x / 90) % fullPie;
+        this.result.y = (this.last.y + this.tmp.y / 90) % fullPie;
+        
+        this.target.changed(this.getX(), this.getY());
+    },
+    
+    setX: function(x)
+    {
+        this.result.x = x / 180 * Math.PI;
+        this.render();
+    },
+    
+    setY: function(y)
+    {
+        this.result.y = y / 180 * Math.PI;
+        this.render();
+    },
+    
+    getX: function()
+    {
+        return this.result.x * 180 / Math.PI;
+    },
+    
+    getY: function()
+    {
+        return this.result.y * 180 / Math.PI;
+    },
+    
+    render: function()
+    {
+        this.target.render(this.result.x, this.result.y);
     }
 };
 
-var Model = function(material)
+var Model = function()
 {
+    var material = new THREE.MeshBasicMaterial(),
+        outerMaterial = new THREE.MeshBasicMaterial();
+    
+    var group = new THREE.Object3D();
+    
     var head = create_part(material, 0, 8, 8, 8, 8),
-    	outer = create_part(material, 0, 8, 8, 8, 8),
+    	outer = create_part(outerMaterial, 0, 8, 8, 8, 8),
     	body = create_part(material, 0, -2, 8, 12, 4),
     	left_arm = create_part(material, -6, -2, 4, 12, 4),
     	right_arm = create_part(material, 6, -2, 4, 12, 4),
     	left_leg = create_part(material, -2, -14, 4, 12, 4),
     	right_leg = create_part(material, 2, -14, 4, 12, 4);
+        
+    this.material = material;
+    this.outerMaterial = outerMaterial;
+    
+    this.group = group;
+    
+    this.head = head;
+    this.outer = outer;
+    this.body = body;
+    this.left_arm = left_arm;
+    this.left_leg = left_leg;
+    this.right_arm = right_arm;
+    this.right_leg = right_leg;
 
-    apply_cube(head.geometry, 0, 16, 8, 8, 8);
-    apply_cube(outer.geometry, 32, 16, 8, 8, 8);
-    apply_cube(body.geometry, 16, 0, 8, 12, 4);
-    apply_cube(left_arm.geometry, 40, 0, 4, 12, 4);
-    apply_cube(right_arm.geometry, 40, 0, 4, 12, 4);
-    apply_cube(left_leg.geometry, 0, 0, 4, 12, 4);
-    apply_cube(right_leg.geometry, 0, 0, 4, 12, 4);
+    this.applyUV();
 
     invert(right_arm);
     invert(right_leg);
-
-    var group = new THREE.Object3D();
 
     group.position.set(0, 32, 0);
     group.add(head);
@@ -230,16 +278,6 @@ var Model = function(material)
     group.scale.x = group.scale.y = group.scale.z = 96;
     outer.scale.x = outer.scale.y = outer.scale.z = 1.1;
     outer.material.transparent = true;
-    
-    this.group = group;
-    
-    this.head = head;
-    this.outer = outer;
-    this.body = body;
-    this.left_arm = left_arm;
-    this.left_leg = left_leg;
-    this.right_arm = right_arm;
-    this.right_leg = right_leg;
 };
 
 Model.prototype = 
@@ -261,6 +299,7 @@ Model.prototype =
             this.group.remove(this.right_leg);
             
             this.head.position.y = 0;
+            this.outer.position.y = 0;
         }
         else
         {
@@ -270,8 +309,40 @@ Model.prototype =
             this.group.add(this.right_arm);
             this.group.add(this.right_leg);
             
-            this.head.position.y = 8;
+            this.head.position.y = 1;
+            this.outer.position.y = 1;
         }
+    },
+    
+    includeHair: function(flag)
+    {
+        this.outer.visible = flag;
+    },
+    
+    applyUV: function()
+    {
+        apply_cube(this.head.geometry, 0, 16, 8, 8, 8);
+        apply_cube(this.outer.geometry, 32, 16, 8, 8, 8);
+        apply_cube(this.body.geometry, 16, 0, 8, 12, 4);
+        apply_cube(this.left_arm.geometry, 40, 0, 4, 12, 4);
+        apply_cube(this.right_arm.geometry, 40, 0, 4, 12, 4);
+        apply_cube(this.left_leg.geometry, 0, 0, 4, 12, 4);
+        apply_cube(this.right_leg.geometry, 0, 0, 4, 12, 4);
+    },
+    
+    setTexture: function(texture)
+    {
+        this.material.map = texture;
+        this.outerMaterial.map = texture;
+    },
+    
+    setImage: function(image)
+    {
+        this.material.map.image = image;
+        this.material.map.needsUpdate = true;
+        
+        this.outerMaterial.map.image = image;
+        this.outerMaterial.map.needsUpdate = true;
     }
 };
 
@@ -283,8 +354,6 @@ var App = function(options, canvas, w, h)
     this.options = options;
     this.canvas = canvas;
     this.size = point(w, h);
-    
-    this.material = new THREE.MeshBasicMaterial({depthWrite: false});
 };
 
 App.prototype = 
@@ -294,6 +363,7 @@ App.prototype =
         this.initThree();
         this.initModel();
         this.initMouseHandler();
+        this.initOptions();
     },
     
     initThree: function()
@@ -312,7 +382,7 @@ App.prototype =
         
         /* ThreeJS initialization */
         scene = new THREE.Scene();
-        camera = new THREE.OrthographicCamera(-halfW, halfW, halfH, -halfH, -1000, 1000);
+        camera = new THREE.CombinedCamera(width, height, 50, 0.1, 1000, -1000, 1000);
         loader = new THREE.TextureLoader();
 
         renderer = new THREE.WebGLRenderer({
@@ -325,13 +395,12 @@ App.prototype =
         renderer.domElement.classList.add("renderer");
         
         this.canvas.appendChild(renderer.domElement);
-        camera.position.z = 4;
         
         loader.load('steve.png', function(texture) 
         {
     		texture.magFilter = texture.minFilter = THREE.NearestFilter;
 	        
-            self.material.map = texture;
+            self.model.setTexture(texture);
             self.render(Math.PI/4, Math.PI/4);
         });
         
@@ -349,14 +418,97 @@ App.prototype =
     
     initModel: function()
     {
-        this.model = new Model(this.material);
+        this.model = new Model();
         this.scene.add(this.model.group);
         this.model.headOnly(true);
+    },
+    
+    initOptions: function()
+    {
+        var self = this;
+        
+        $$("input", this.options).forEach(function (input)
+        {
+            on(input, "change", function ()
+            {   
+                self.change(input.name, input);
+            });
+        });
+        
+        on($("#reset"), "click", function()
+        {
+            $("[name=x]").value = $("[name=y]").value = 45;
+            
+            self.mouse.setX(45);
+            self.mouse.setY(45);
+        });
+    },
+    
+    change: function(name, input)
+    {
+        if (name == "head")
+        {
+            this.model.headOnly(input.checked);
+        }
+        else if (name == "outer")
+        {
+            this.model.includeHair(input.checked);
+        }
+        else if (name == "flat")
+        {
+            input.checked ? this.camera.toOrtho() : this.camera.toPerspec();
+        }
+        else if (name == "texture")
+        {
+            this.readFile(input.files[0]);
+        }
+        else if (name == "x")
+        {
+            this.mouse.setX(parseInt(input.value));
+        }
+        else if (name == "y")
+        {
+            this.mouse.setY(parseInt(input.value));
+        }
+        
+        this.justRender();
+    },
+    
+    changed: function(x, y)
+    {
+        $("[name=x]").value = x.toFixed(4);
+        $("[name=y]").value = y.toFixed(4);
+    },
+    
+    readFile: function(file)
+    {
+        var self = this;
+        
+        var reader = new FileReader(),
+            image = new Image();
+        
+        image.onload = function()
+        {
+            self.model.setImage(this);
+            self.justRender();
+        };
+        
+        reader.onload = function(e)
+        {
+            image.src = e.target.result;
+        };
+        
+        reader.readAsDataURL(file);
     },
     
     render: function (x, y)
     {
         this.model.rotate(x, y);
-		this.renderer.render(this.scene, this.camera);
+		this.renderer.render(this.scene, this.camera.camera);
+    },
+    
+    justRender: function()
+    {
+        this.render(this.mouse.result.x, this.mouse.result.y);
     }
 };
