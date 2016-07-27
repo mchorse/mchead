@@ -98,7 +98,7 @@ function apply_cube(geo, x, y, w, h, d)
 /**
  * Create a Minecraft-like limb (3d rectangle)
  */
-function create_part(texture, material, x, y, w, h, d)
+function create_part(material, x, y, w, h, d)
 {
 	var geometry = new THREE.BoxGeometry(w / 8, h / 8, d / 8);
 	var cube = new THREE.Mesh(geometry, material);
@@ -149,7 +149,7 @@ var MouseHandler = function(target, x, y)
     this.first = point(0, 0);
     this.tmp = point(0, 0);
     this.last = point(0, 0);
-}
+};
 
 MouseHandler.prototype = 
 {
@@ -195,6 +195,86 @@ MouseHandler.prototype =
     }
 };
 
+var Model = function(material)
+{
+    var head = create_part(material, 0, 8, 8, 8, 8),
+    	outer = create_part(material, 0, 8, 8, 8, 8),
+    	body = create_part(material, 0, -2, 8, 12, 4),
+    	left_arm = create_part(material, -6, -2, 4, 12, 4),
+    	right_arm = create_part(material, 6, -2, 4, 12, 4),
+    	left_leg = create_part(material, -2, -14, 4, 12, 4),
+    	right_leg = create_part(material, 2, -14, 4, 12, 4);
+
+    apply_cube(head.geometry, 0, 16, 8, 8, 8);
+    apply_cube(outer.geometry, 32, 16, 8, 8, 8);
+    apply_cube(body.geometry, 16, 0, 8, 12, 4);
+    apply_cube(left_arm.geometry, 40, 0, 4, 12, 4);
+    apply_cube(right_arm.geometry, 40, 0, 4, 12, 4);
+    apply_cube(left_leg.geometry, 0, 0, 4, 12, 4);
+    apply_cube(right_leg.geometry, 0, 0, 4, 12, 4);
+
+    invert(right_arm);
+    invert(right_leg);
+
+    var group = new THREE.Object3D();
+
+    group.position.set(0, 32, 0);
+    group.add(head);
+    group.add(outer);
+    group.add(body);
+    group.add(left_arm);
+    group.add(right_arm);
+    group.add(left_leg);
+    group.add(right_leg);
+
+    group.scale.x = group.scale.y = group.scale.z = 96;
+    outer.scale.x = outer.scale.y = outer.scale.z = 1.1;
+    outer.material.transparent = true;
+    
+    this.group = group;
+    
+    this.head = head;
+    this.outer = outer;
+    this.body = body;
+    this.left_arm = left_arm;
+    this.left_leg = left_leg;
+    this.right_arm = right_arm;
+    this.right_leg = right_leg;
+};
+
+Model.prototype = 
+{
+    rotate: function(x, y)
+    {
+        this.group.rotation.x = y;
+        this.group.rotation.y = x;
+    },
+    
+    headOnly: function(flag)
+    {
+        if (flag)
+        {
+            this.group.remove(this.body);
+            this.group.remove(this.left_arm);
+            this.group.remove(this.left_leg);
+            this.group.remove(this.right_arm);
+            this.group.remove(this.right_leg);
+            
+            this.head.position.y = 0;
+        }
+        else
+        {
+            this.group.add(this.body);
+            this.group.add(this.left_arm);
+            this.group.add(this.left_leg);
+            this.group.add(this.right_arm);
+            this.group.add(this.right_leg);
+            
+            this.head.position.y = 8;
+        }
+    }
+};
+
 /**
  * Entry point of the application
  */
@@ -212,6 +292,7 @@ App.prototype =
     init: function()
     {
         this.initThree();
+        this.initModel();
         this.initMouseHandler();
     },
     
@@ -241,69 +322,23 @@ App.prototype =
 
         renderer.setClearColor(0xffffff, 0.0);
         renderer.setSize(width, height);
-
         renderer.domElement.classList.add("renderer");
+        
         this.canvas.appendChild(renderer.domElement);
+        camera.position.z = 4;
         
-        loader.load(
-        	'steve.png',
-        	function(texture) 
-            {
-        		texture.magFilter = texture.minFilter = THREE.NearestFilter;
-		        self.material.map = texture;
-                
-    			var head = create_part(texture, self.material, 0, 8, 8, 8, 8),
-    				outer = create_part(texture, self.material, 0, 8, 8, 8, 8),
-    				body = create_part(texture, self.material, 0, -2, 8, 12, 4),
-    				left_arm = create_part(texture, self.material, -6, -2, 4, 12, 4),
-    				right_arm = create_part(texture, self.material, 6, -2, 4, 12, 4),
-    				left_leg = create_part(texture, self.material, -2, -14, 4, 12, 4),
-    				right_leg = create_part(texture, self.material, 2, -14, 4, 12, 4);
-			
-    			apply_cube(head.geometry, 0, 16, 8, 8, 8);
-    			apply_cube(outer.geometry, 32, 16, 8, 8, 8);
-    			apply_cube(body.geometry, 16, 0, 8, 12, 4);
-    			apply_cube(left_arm.geometry, 40, 0, 4, 12, 4);
-    			apply_cube(right_arm.geometry, 40, 0, 4, 12, 4);
-    			apply_cube(left_leg.geometry, 0, 0, 4, 12, 4);
-    			apply_cube(right_leg.geometry, 0, 0, 4, 12, 4);
-                
-                invert(right_arm);
-                invert(right_leg);
-                
-    			var group = new THREE.Object3D();
-			
-                group.position.set(0, 32, 0);
-    			group.add(head);
-    			group.add(outer);
-    			group.add(body);
-    			group.add(left_arm);
-    			group.add(right_arm);
-    			group.add(left_leg);
-    			group.add(right_leg);
-			
-    			camera.position.z = 4;
-			
-                group.scale.x = group.scale.y = group.scale.z = 96;
-    			outer.scale.x = outer.scale.y = outer.scale.z = 1.1;
-    			outer.material.transparent = true;
-    			scene.add(group);
-		
-        		self.render = function(x, y)
-        		{
-                    group.rotation.y = x;
-        			group.rotation.x = y;
-            
-        			renderer.render(scene, camera);
-        		};
-        
-                self.render(Math.PI/4, Math.PI/4);
-        	}
-        );
+        loader.load('steve.png', function(texture) 
+        {
+    		texture.magFilter = texture.minFilter = THREE.NearestFilter;
+	        
+            self.material.map = texture;
+            self.render(Math.PI/4, Math.PI/4);
+        });
         
         /* Export */
         this.scene = scene;
         this.renderer = renderer;
+        this.camera = camera;
     },
     
     initMouseHandler: function()
@@ -312,5 +347,16 @@ App.prototype =
         this.mouse.attach(this.renderer.domElement);
     },
     
-    render: function (){}
+    initModel: function()
+    {
+        this.model = new Model(this.material);
+        this.scene.add(this.model.group);
+        this.model.headOnly(true);
+    },
+    
+    render: function (x, y)
+    {
+        this.model.rotate(x, y);
+		this.renderer.render(this.scene, this.camera);
+    }
 };
