@@ -46,7 +46,7 @@ a:hover
     margin-bottom: 0.5em; 
 }
 
-#renderer
+.renderer
 {
     cursor: move;
 }

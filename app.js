@@ -1,4 +1,35 @@
 /**
+ * McHead – avatar generator based on Minecraft skins.
+ * 
+ * @author McHorse
+ * @license MIT
+ */
+
+function to_a(arrayLike)
+{
+    return Array.prototype.slice.call(arrayLike);
+}
+
+/* DOM stuff */
+
+function $(selector, reference)
+{
+    return (reference || document).querySelector(selector);
+}
+
+function $$(selector, reference)
+{
+    return to_a((reference || document).querySelectorAll(selector));
+}
+
+function on(node, event, listener)
+{
+    node.addEventListener(event, listener);
+}
+
+/* ThreeJS stuff */
+
+/**
  * Creates a point structure.
  */
 function point(x, y)
@@ -6,12 +37,15 @@ function point(x, y)
     return {x: x, y: y};
 }
 
+window.tw = 64;
+window.th = 32;
+
 /**
  * Creates a ThreeJS vector (2d point) for UV.
  */
 function vec(x, y)
 {
-	return new THREE.Vector2(x / tw, y / th);
+	return new THREE.Vector2(x / 64, y / 32);
 }
 
 /**
@@ -64,20 +98,41 @@ function apply_cube(geo, x, y, w, h, d)
 /**
  * Create a Minecraft-like limb (3d rectangle)
  */
-function create_part(texture, x, y, w, h, d)
+function create_part(texture, material, x, y, w, h, d)
 {
 	var geometry = new THREE.BoxGeometry(w / 8, h / 8, d / 8);
-	var material = new THREE.MeshLambertMaterial({
-		map: texture,
-		side: THREE.DoubleSide
-	});
-	
 	var cube = new THREE.Mesh(geometry, material);
 	
 	cube.position.x = x ? x / 8 : 0;
 	cube.position.y = y ? y / 8 : 0;
 	
 	return cube;
+}
+
+function invert(mesh)
+{
+    var geo = mesh.geometry;
+    
+    geo.scale(-1, 1, 1);
+    geo.scale(-1, 1, 1);
+    
+    geo.dynamic = true
+    geo.__dirtyVertices = true;
+    geo.__dirtyNormals = true;
+
+    mesh.flipSided = true;
+    
+    for (var i = 0, count = geo.faces.length; i < count; i ++)
+    {
+        var face = geo.faces[i];
+        
+        face.normal.x *= -1;
+        face.normal.y *= -1;
+        face.normal.z *= -1;
+    }
+    
+    geo.computeVertexNormals();
+    geo.computeFaceNormals();
 }
 
 /**
@@ -96,12 +151,13 @@ var MouseHandler = function(target, x, y)
     this.last = point(0, 0);
 }
 
-MouseHandler.prototype = {
+MouseHandler.prototype = 
+{
     attach: function(element)
     {
-        element.addEventListener("mousedown", this.down.bind(this));
-        element.addEventListener("mousemove", this.move.bind(this));
-        element.addEventListener("mouseup", this.up.bind(this));
+        on(element, "mousedown", this.down.bind(this));
+        on(element, "mousemove", this.move.bind(this));
+        on(element, "mouseup", this.up.bind(this));
     },
     
     down: function(e)
@@ -139,88 +195,122 @@ MouseHandler.prototype = {
     }
 };
 
-window.render = function() {};
-
-function $(selector, reference)
+/**
+ * Entry point of the application
+ */
+var App = function(options, canvas, w, h)
 {
-    return (reference || document).querySelector(selector);
-}
+    this.options = options;
+    this.canvas = canvas;
+    this.size = point(w, h);
+    
+    this.material = new THREE.MeshBasicMaterial({depthWrite: false});
+};
 
-/* ThreeJS variables */
-var scene, camera, renderer, loader;
-
-/* Resolution */
-var width = 256, height = 256;
-
-/* Texture size */
-var tw = 64, th = 32;
-
-/* ThreeJS initialization */
-var ambientLight = new THREE.AmbientLight(0x333333);
-
-scene = new THREE.Scene();
-camera = new THREE.OrthographicCamera(width / -2, width / 2, height / 2, height / -2, -1000, 1000);
-loader = new THREE.TextureLoader();
-
-renderer = new THREE.WebGLRenderer({
-    preserveDrawingBuffer: true,
-    alpha: true 
-});
-
-renderer.setClearColor(0xffffff, 0.0);
-renderer.setSize(width, height);
-
-var lights = [
-    new THREE.PointLight( 0xffffff, 1, 0 ),
-    new THREE.PointLight( 0xffffff, 1, 0 ), 
-    new THREE.PointLight( 0xffffff, 1, 0 )
-];
-
-lights[0].position.set( 0, 400, 0 );
-lights[1].position.set( 2000, 0, 2000 );
-lights[2].position.set( -100, 0, 100 );
-
-scene.add(ambientLight);
-scene.add(lights[0]);
-scene.add(lights[1]);
-scene.add(lights[2]);
-
-renderer.domElement.id = "renderer";
-$(".canvas").appendChild(renderer.domElement);
-
-loader.load(
-	'steve.png',
-	function(texture) 
+App.prototype = 
+{
+    init: function()
     {
-		texture.magFilter = texture.minFilter = THREE.NearestFilter;
-		
-		var head = create_part(texture, 0, 0, 8, 8, 8),
-            outer = create_part(texture, 0, 0, 8, 8, 8);
-		
-		apply_cube(head.geometry, 0, 16, 8, 8, 8);
-		apply_cube(outer.geometry, 32, 16, 8, 8, 8);
-		
-		var group = new THREE.Object3D();
-		
-        group.scale.x = group.scale.y = group.scale.z = 128;
-		outer.scale.x = outer.scale.y = outer.scale.z = 1.1;
-		outer.material.transparent = true;
-        camera.position.z = 1;
-		
-		group.add(head);
-		group.add(outer);
-		scene.add(group);
-		
-		window.render = function(x, y)
-		{
-			group.rotation.y = x;
-			group.rotation.x = y;
-            
-			renderer.render(scene, camera);
-		};
+        this.initThree();
+        this.initMouseHandler();
+    },
+    
+    initThree: function()
+    {
+        var self = this;
         
-        window.render(Math.PI/4, Math.PI/4);
-	}
-);
+        /* ThreeJS variables */
+        var scene, camera, renderer, loader;
 
-(new MouseHandler(window, Math.PI/4, Math.PI/4)).attach(renderer.domElement);
+        /* Resolution */
+        var width = this.size.x, 
+            height = this.size.y;
+
+        var halfW = width / 2,
+            halfH = height / 2;
+        
+        /* ThreeJS initialization */
+        scene = new THREE.Scene();
+        camera = new THREE.OrthographicCamera(-halfW, halfW, halfH, -halfH, -1000, 1000);
+        loader = new THREE.TextureLoader();
+
+        renderer = new THREE.WebGLRenderer({
+            preserveDrawingBuffer: true,
+            alpha: true 
+        });
+
+        renderer.setClearColor(0xffffff, 0.0);
+        renderer.setSize(width, height);
+
+        renderer.domElement.classList.add("renderer");
+        this.canvas.appendChild(renderer.domElement);
+        
+        loader.load(
+        	'steve.png',
+        	function(texture) 
+            {
+        		texture.magFilter = texture.minFilter = THREE.NearestFilter;
+		        self.material.map = texture;
+                
+    			var head = create_part(texture, self.material, 0, 8, 8, 8, 8),
+    				outer = create_part(texture, self.material, 0, 8, 8, 8, 8),
+    				body = create_part(texture, self.material, 0, -2, 8, 12, 4),
+    				left_arm = create_part(texture, self.material, -6, -2, 4, 12, 4),
+    				right_arm = create_part(texture, self.material, 6, -2, 4, 12, 4),
+    				left_leg = create_part(texture, self.material, -2, -14, 4, 12, 4),
+    				right_leg = create_part(texture, self.material, 2, -14, 4, 12, 4);
+			
+    			apply_cube(head.geometry, 0, 16, 8, 8, 8);
+    			apply_cube(outer.geometry, 32, 16, 8, 8, 8);
+    			apply_cube(body.geometry, 16, 0, 8, 12, 4);
+    			apply_cube(left_arm.geometry, 40, 0, 4, 12, 4);
+    			apply_cube(right_arm.geometry, 40, 0, 4, 12, 4);
+    			apply_cube(left_leg.geometry, 0, 0, 4, 12, 4);
+    			apply_cube(right_leg.geometry, 0, 0, 4, 12, 4);
+                
+                invert(right_arm);
+                invert(right_leg);
+                
+    			var group = new THREE.Object3D();
+			
+                group.position.set(0, 32, 0);
+    			group.add(head);
+    			group.add(outer);
+    			group.add(body);
+    			group.add(left_arm);
+    			group.add(right_arm);
+    			group.add(left_leg);
+    			group.add(right_leg);
+			
+    			camera.position.z = 4;
+			
+                group.scale.x = group.scale.y = group.scale.z = 96;
+    			outer.scale.x = outer.scale.y = outer.scale.z = 1.1;
+    			outer.material.transparent = true;
+    			scene.add(group);
+		
+        		self.render = function(x, y)
+        		{
+                    group.rotation.y = x;
+        			group.rotation.x = y;
+            
+        			renderer.render(scene, camera);
+        		};
+        
+                self.render(Math.PI/4, Math.PI/4);
+        	}
+        );
+        
+        /* Export */
+        this.scene = scene;
+        this.renderer = renderer;
+    },
+    
+    initMouseHandler: function()
+    {
+        this.mouse = new MouseHandler(this, Math.PI/4, Math.PI/4);
+        this.mouse.attach(this.renderer.domElement);
+    },
+    
+    render: function (){}
+};

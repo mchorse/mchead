@@ -63,5 +63,13 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.min.js"></script>
 <script src="app.js"></script>
+<script>
+    var options = $(".options"),
+        canvas = $(".canvas");
+
+    var app = new App(options, canvas, 256, 512);
+
+    app.init();
+</script>
 	</body>
 </html>
