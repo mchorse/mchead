@@ -45,6 +45,7 @@
         </p>
         
         <p>
+            Version <span id="version">-1</span>.
             Created by <a href="http://github.com/mchorse/">McHorse</a>, hosted 
             on <a href="http://github.com/mchorse/mchead/">github</a>.
         </p>
@@ -63,9 +64,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r79/three.min.js"></script>
 <script src="app.js"></script>
 <script>
+    /** McHead bootstrap application */
     var options = McHead.dom.$(".options"),
         canvas = McHead.dom.$(".canvas"),
         output = McHead.dom.$("#output");
+    
+    McHead.dom.$("#version").innerHTML = McHead.version;
 
     (new McHead.App(options, canvas, output, 256, 512)).init();
 </script>
