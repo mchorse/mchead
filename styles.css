@@ -114,7 +114,8 @@ a:hover
     vertical-align: 1px;
 }
 
-.options [type=number]
+.options [type=number],
+.options [type=text]
 {
     padding: 2px 4px;
 }
